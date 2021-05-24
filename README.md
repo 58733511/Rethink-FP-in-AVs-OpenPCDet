@@ -2,7 +2,7 @@
 
 ## Introduction 
 * It will an official code of our conference paper "Rethink the false positive objects in automotive vehicle". 
-* This work will focus on solving the issue-> solo LiDAR method tends to detect lots of false positive objects.
+* This work will focus on solving the FP issue-> solo LiDAR method tends to detect lots of false positive objects.
 
 
 ## Plan 
