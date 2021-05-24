@@ -2,7 +2,7 @@
 
 ## Introduction 
 * It will be an official code of our conference paper "Rethink the false positive objects in automotive vehicle". 
-* The code is based on OpenPCDet under https://github.com/open-mmlab/OpenPCDet
+* The code is based on OpenPCDet under https://github.com/open-mmlab/OpenPCDet and https://nv-adlr.github.io/publication/2018-Segmentation
 * This work will focus on solving the FP issue-> solo LiDAR method tends to detect lots of false positive objects.
 
 
