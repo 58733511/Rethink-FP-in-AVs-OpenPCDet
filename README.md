@@ -25,6 +25,7 @@
 ## getting started
 * download the semantic segmentation result from https://drive.google.com/drive/folders/1b98adm66H7gt3fOGzDv5s-uMYhSO9y2U?usp=sharing
 * prepare your data as following
+```
 OpenPCDet
 ├── data
 │   ├── kitti
@@ -35,7 +36,7 @@ OpenPCDet
 │   │   │   ├──calib & velodyne & image_2
 ├── pcdet
 ├── tools
-
+```
 ## Changelog
 * 24.05 edit OCCLUSION_DEPTH_MAP,ROI_GRID_POOL_ADD_MODULE in the config, edit kitti_dataset.py and pv_rcnn.py
   * save the depth map and semantic segmentation image in the kitti_dataset.py
