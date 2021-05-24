@@ -25,8 +25,8 @@
 * 24.05 edit OCCLUSION_DEPTH_MAP,ROI_GRID_POOL_ADD_MODULE in the config, edit kitti_dataset.py and pv_rcnn.py
   * save the depth map and semantic segmentation image in the kitti_dataset.py
   * calculate occlusion feature and semantic segmentation feature in the function _spherical_project_ in pv_rcnn.py
-  * merge the pooled_features of grid points and occlusion feature and semantic segmentation feature of grid point
-  * several times of experiments show that these module can effectively reduce the FP and get the stable improvement **+~5** for Ped and **+~3** for cyclist
+  * merge the pooled_features of grid points with the occlusion feature & semantic segmentation feature of grid point
+  * several times of experiments showed that these module can effectively reduce the FP and get the stable improvement **+~5** for Ped and **+~3** for cyclist
 
 ## about Authors
 * LeiChen Wang, PhD candidate at Uni Konstanz
