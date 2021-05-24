@@ -14,7 +14,7 @@
 * Juni
   * optimize and upload "multi-modal attention" module
   * compare and summary the detection result between original **PartA2**/**PointRCNN**/**PVRCNN** and our version
-  * submit result to KIITI benchmark
+  * submit result to KITTI benchmark
   
 * Juli
   * write paper
