@@ -1,6 +1,7 @@
 # Rethink-FP-in-AVs-OpenPCDet
 
 ## Introduction 
+* !!! DDL: Submission to the IEEE Robotics and Automation Letters (RA-L) journal with the ICRA 2022 option (paper and accompanying video deadline Sept 9, 2021). Six pages in standard ICRA format are allowed for each paper, including figures and references, and a maximum of two additional pages can be purchased. Details are provided on the RA-L webpage and FAQ.
 * It will be an official code of our conference paper "Rethink the false positive objects in automotive vehicle". 
 * The code is based on OpenPCDet under https://github.com/open-mmlab/OpenPCDet and https://nv-adlr.github.io/publication/2018-Segmentation
 * This work will focus on solving the FP issue-> solo LiDAR method tends to detect lots of false positive objects.
