@@ -9,18 +9,18 @@
 
 ## Plan 
 * Mai
-  * upload "semantic segmentation image" module, "occlusion" module
+  * ~~upload "semantic segmentation image" module, "occlusion" module~~
   * upload "point transformer" module
-  * train **PartA2** with our module
+  * train **PartA2** with our module -> check PartA2.yaml
 
 * Juni
   * optimize and upload "multi-modal attention" module
   * compare and summary the detection result between original **PartA2**/**PointRCNN**/**PVRCNN** and our version
-  * submit result to KITTI benchmark
   
 * Juli
-  * write paper
   * clean code 
+  * submit result to KITTI benchmark
+  * write paper
 
 
 ## getting started
