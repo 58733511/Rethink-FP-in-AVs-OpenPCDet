@@ -10,12 +10,12 @@
 ## Plan 
 * Mai
   * ~~upload "semantic segmentation image" module, "occlusion" module~~
-  * upload "point transformer" module
-  * train **PartA2** with our module -> check PartA2.yaml
+  * upload "point transformer" module @ Simon
+  * train **PartA2** with our module -> check PartA2.yaml -> before 21.6
 
 * Juni
-  * optimize and upload "multi-modal attention" module
-  * compare and summary the detection result between original **PartA2**/**PointRCNN**/**PVRCNN** and our version
+  * optimize and upload "multi-modal attention" module @ LeiChen 
+  * compare and summary the detection result between original **PartA2**/**PointRCNN**/**PVRCNN** and our version @ Simon& LeiChen 
   
 * Juli
   * clean code 
