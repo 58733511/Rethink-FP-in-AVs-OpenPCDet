@@ -6,6 +6,13 @@
 * The code is based on OpenPCDet under https://github.com/open-mmlab/OpenPCDet and https://nv-adlr.github.io/publication/2018-Segmentation
 * This work will focus on solving the FP issue-> solo LiDAR method tends to detect lots of false positive objects.
 
+## new idea from 17.06 
+  * implement and upload "3D object to object attention/relation" module @ LeiChen
+  * this module will learn the 3D object to object relation by self-attention, to calculate the possibility that each object to be a FP.
+  * also, for each proposal, the other target objects are learned to do refinement.  
+  * ![image](https://user-images.githubusercontent.com/24293567/122360165-7ad74f00-cf56-11eb-860a-2885deb296e3.png)
+
+
 
 ## Plan 
 * Mai
