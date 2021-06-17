@@ -7,6 +7,7 @@
 * This work will focus on solving the FP issue-> solo LiDAR method tends to detect lots of false positive objects.
 
 ## new idea from 17.06 
+  * reference: Relation-Networks-for-Object-Detection
   * implement and upload "3D object to object attention/relation" module @ LeiChen
   * this module will learn the 3D object to object relation by self-attention, to calculate the possibility that each object to be a FP.
   * also, for each proposal, the other target objects are learned to do refinement.  
