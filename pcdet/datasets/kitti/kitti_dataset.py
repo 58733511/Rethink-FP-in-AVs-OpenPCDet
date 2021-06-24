@@ -210,6 +210,8 @@ class KittiDataset(DatasetTemplate):
         if not seg_img_file.exists():
             return None
         seg_Img = cv2.imread(str(seg_img_file))
+        resize_dim = (375, 1242)
+        seg_Img = cv2.resize(seg_Img, resize_dim,interpolation = cv2.INTER_AREA)                             
         seg_Img = np.array(seg_Img,dtype=float)
         return seg_Img
 
