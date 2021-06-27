@@ -6,13 +6,100 @@ import numpy as np
 from ...utils import box_utils,calibration_kitti,common_utils
 import cv2
 import math
+from .relation_3d import extract_position_matrix
+###########################
+#relation module
+############################################################################################
+##### Created by LeiChen
+##### add an attention feature to FC feature, then feed to calculate cls_score/bbox_pred
+##### reference: Relation-Networks-for-Object-Detection
+##### https://nv-adlr.github.io/publication/2018-Segmentation
+############################################################################################
+class RelationModule(nn.Module):
+    def __init__(self, n_relations = 16, appearance_feature_dim=1024,key_feature_dim = 64, geo_feature_dim = 64, isDuplication = False):
+        super(RelationModule, self).__init__()
+        self.isDuplication=isDuplication
+        self.Nr = n_relations
+        self.dim_g = geo_feature_dim
+        self.relation = nn.ModuleList()
+        for N in range(self.Nr):
+            self.relation.append(RelationUnit(appearance_feature_dim, key_feature_dim, geo_feature_dim))
+    def forward(self, input_data,position_embedding):
+        if(self.isDuplication):
+            f_a, embedding_f_a, position_embedding =input_data
+        else:
+            # suppose the input_data is only f_a
+            f_a = input_data
+        isFirst=True
+        for N in range(self.Nr):
+            if(isFirst):
+                if(self.isDuplication):
+                    concat = self.relation[N](embedding_f_a,position_embedding)
+                else:
+                    concat = self.relation[N](f_a,position_embedding)
+                isFirst=False
+            else:
+                if(self.isDuplication):
+                    concat = torch.cat((concat, self.relation[N](embedding_f_a, position_embedding)), -1)
+                else:
+                    concat = torch.cat((concat, self.relation[N](f_a, position_embedding)), -1)
+        concat = concat.view(concat.shape[0],concat.shape[1],1)
+
+        return concat+f_a
+    
+class RelationUnit(nn.Module):
+    def __init__(self, appearance_feature_dim=256,key_feature_dim = 64, geo_feature_dim = 64):
+        super(RelationUnit, self).__init__()
+        self.dim_g = geo_feature_dim
+        self.dim_k = key_feature_dim
+        self.WG = nn.Linear(geo_feature_dim, 1, bias=True)
+        self.WK = nn.Linear(256, self.dim_k, bias=True)
+        self.WQ = nn.Linear(256, self.dim_k, bias=True)
+        self.WV = nn.Linear(256, self.dim_k, bias=True)
+        self.relu = nn.ReLU(inplace=True)
+
+
+    def forward(self, f_a, position_embedding):
+        N = f_a.shape[0]
+        f_a = f_a.view(1,f_a.shape[0],f_a.shape[1])
+        position_embedding = position_embedding.view(-1,self.dim_g)
+        w_g = self.relu(self.WG(position_embedding))
+
+        w_k = self.WK(f_a)
+        w_k = w_k.view(N,1,self.dim_k)
+        w_q = self.WQ(f_a)
+
+        w_q = w_q.view(1,N,self.dim_k)
+
+        w_v = self.WV(f_a)
+
+        w_v = w_v.view(N,1,-1)
+        
+        scaled_dot = torch.sum((w_k*w_q),-1 )
+        scaled_dot = scaled_dot / np.sqrt(self.dim_k)
+
+        w_g = w_g.view(N,N)
+
+        w_a = scaled_dot.view(N,N)
+
+        w_mn = torch.log(torch.clamp(w_g, min = 1e-6)) + w_a
+        w_mn = torch.nn.Softmax(dim=1)(w_mn)
+        
+
+        output = w_mn*w_v
+
+        output = torch.sum(output,-2)
+        return output
+###########################
 
 def get_seg_info_using_points_in_box(pts_rect,calib,bbox_lidar):
     corners_lidar = box_utils.boxes_to_corners_3d(bbox_lidar)
     flag = box_utils.in_hull(pts_rect[:, 0:3], corners_lidar)
     pts_in_box = pts_rect[flag,:]
     return pts_in_box 
-       
+
+
+        
 class PVRCNNHead(RoIHeadTemplate):
     def __init__(self, input_channels, model_cfg, num_class=1):
         super().__init__(num_class=num_class, model_cfg=model_cfg)
@@ -43,24 +130,38 @@ class PVRCNNHead(RoIHeadTemplate):
         )
         GRID_SIZE = self.model_cfg.ROI_GRID_POOL.GRID_SIZE
         
+        self.isDuplication=self.model_cfg.RELATION_MODULE.DUPLICATION
+        self.Nr = self.model_cfg.RELATION_MODULE.N_RELATIONS
+        self.dim_g = self.model_cfg.RELATION_MODULE.GEO_FEATURE_DIM
+        self.fc_features = self.model_cfg.RELATION_MODULE.FC_FEATURE  
+        self.dim_key = self.model_cfg.RELATION_MODULE.KEY_FEATURE  
+
         #c_out = sum([x[-1] for x in mlps])
         #change
         c_out = sum([x[-1] for x in mlps])+sum([x[-1] for x in add_mlps])
         pre_channel = GRID_SIZE * GRID_SIZE * GRID_SIZE * c_out
 
         shared_fc_list = []
+        
+        self.relation_module= RelationModule(n_relations = self.Nr, appearance_feature_dim=self.fc_features,
+                                   key_feature_dim = self.dim_key, geo_feature_dim = self.dim_g)
+        
         for k in range(0, self.model_cfg.SHARED_FC.__len__()):
-
             shared_fc_list.extend([
                 nn.Conv1d(pre_channel, self.model_cfg.SHARED_FC[k], kernel_size=1, bias=False),
                 nn.BatchNorm1d(self.model_cfg.SHARED_FC[k]),
                 nn.ReLU()
-            ])
+            ])          
+                
             pre_channel = self.model_cfg.SHARED_FC[k]
 
             if k != self.model_cfg.SHARED_FC.__len__() - 1 and self.model_cfg.DP_RATIO > 0:
                 shared_fc_list.append(nn.Dropout(self.model_cfg.DP_RATIO))
-        self.shared_fc_layer = nn.Sequential(*shared_fc_list)
+        # in order to put position embbeding after rule, so divide shared_fc_layer 
+        # into shared_fc_layer_1 and shared_fc_layer_2
+        #self.shared_fc_layer = nn.Sequential(*shared_fc_list)
+        self.shared_fc_layer_1 = nn.Sequential(shared_fc_list[0],shared_fc_list[1],shared_fc_list[2],shared_fc_list[3])
+        self.shared_fc_layer_2 = nn.Sequential(shared_fc_list[4],shared_fc_list[5],shared_fc_list[6])
 
         self.cls_layers = self.make_fc_layers(
             input_channels=pre_channel, output_channels=self.num_class, fc_list=self.model_cfg.CLS_FC
@@ -91,6 +192,8 @@ class PVRCNNHead(RoIHeadTemplate):
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
         nn.init.normal_(self.reg_layers[-1].weight, mean=0, std=0.001)
+
+
         
     def spherical_project(self,batch_size,batch_dict,global_roi_grid_points):
         ############################################################################################
@@ -177,8 +280,7 @@ class PVRCNNHead(RoIHeadTemplate):
             
             ##### get the semantic segmentation feature of the projected grid points
             pts_seg_info = seg_feature[pts_in_Seg_Img_copy[:,1],pts_in_Seg_Img_copy[:,0]]
-            # fix for the cluster
-            #pts_seg_info = torch.from_numpy(pts_seg_info).cuda()
+            pts_seg_info = torch.from_numpy(pts_seg_info).cuda()
             global_roi_grid_points_each_batch_features[:,1:4] = pts_seg_info[:,:3]
             global_roi_grid_points_features[batch_num,:,:] = global_roi_grid_points_each_batch_features
             
@@ -293,14 +395,21 @@ class PVRCNNHead(RoIHeadTemplate):
         # RoI aware pooling
         pooled_features = self.roi_grid_pool(batch_dict)  # (BxN, 6x6x6, C)
 
+        # position embedding 
+        position_embedding = extract_position_matrix (batch_dict['rois'])
         grid_size = self.model_cfg.ROI_GRID_POOL.GRID_SIZE
         batch_size_rcnn = pooled_features.shape[0]
         pooled_features = pooled_features.permute(0, 2, 1).\
             contiguous().view(batch_size_rcnn, -1, grid_size, grid_size, grid_size)  # (BxN, C, 6, 6, 6)
 
-        shared_features = self.shared_fc_layer(pooled_features.view(batch_size_rcnn, -1, 1))
-        rcnn_cls = self.cls_layers(shared_features).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, 1 or 2)
-        rcnn_reg = self.reg_layers(shared_features).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, C)
+        shared_features_1 = self.shared_fc_layer_1(pooled_features.view(batch_size_rcnn, -1, 1))
+        if self.model_cfg.RELATION_MODULE.FLAG:
+            shared_features_1_plus_relation = self.relation_module (shared_features_1,position_embedding)
+            shared_features_2 = self.shared_fc_layer_2(shared_features_1_plus_relation)
+        else:
+            shared_features_2 = self.shared_fc_layer_2(shared_features_1)            
+        rcnn_cls = self.cls_layers(shared_features_2).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, 1 or 2)
+        rcnn_reg = self.reg_layers(shared_features_2).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, C)
 
         if not self.training:
             batch_cls_preds, batch_box_preds = self.generate_predicted_boxes(
