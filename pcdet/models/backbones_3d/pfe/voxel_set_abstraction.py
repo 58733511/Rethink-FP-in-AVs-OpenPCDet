@@ -102,7 +102,7 @@ class VoxelSetAbstraction(nn.Module):
         d_dict = {'d_in': self.model_cfg.NUM_OUTPUT_FEATURES,
                   'd_model': self.model_cfg.VECTOR_ATTENTION.INTERNAL_DIM,
                   'd_in_coords': 3}
-        self.localVSA1 = TransformerBlock(d_dict, k=self.model_cfg.VECTOR_ATTENTION_NNEIGH)
+        self.localVSA1 = TransformerBlock(d_dict, k=self.model_cfg.VECTOR_ATTENTION.NNEIGH)
 
         self.num_point_features_before_fusion = c_in
 
