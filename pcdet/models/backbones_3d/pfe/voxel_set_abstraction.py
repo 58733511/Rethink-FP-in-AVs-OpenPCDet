@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from ....ops.pointnet2.pointnet2_stack import pointnet2_modules as pointnet2_stack_modules
 from ....ops.pointnet2.pointnet2_stack import pointnet2_utils as pointnet2_stack_utils
+from ....ops.point_transformer import TransformerBlock
 from ....utils import common_utils
 
 
@@ -97,6 +98,12 @@ class VoxelSetAbstraction(nn.Module):
             nn.ReLU(),
         )
         self.num_point_features = self.model_cfg.NUM_OUTPUT_FEATURES
+
+        d_dict = {'d_in': self.model_cfg.NUM_OUTPUT_FEATURES,
+                  'd_model': self.model_cfg.VECTOR_ATTENTION.INTERNAL_DIM,
+                  'd_in_coords': 3}
+        self.localVSA1 = TransformerBlock(d_dict, k=self.model_cfg.VECTOR_ATTENTION_NNEIGH)
+
         self.num_point_features_before_fusion = c_in
 
     def interpolate_from_bev_features(self, keypoints, bev_features, batch_size, bev_stride):
@@ -233,6 +240,9 @@ class VoxelSetAbstraction(nn.Module):
 
         batch_dict['point_features_before_fusion'] = point_features.view(-1, point_features.shape[-1])
         point_features = self.vsa_point_feature_fusion(point_features.view(-1, point_features.shape[-1]))
+        point_features = point_features.view(batch_dict['batch_size'], -1, point_features.shape[-1])
+        point_features = self.localVSA1(keypoints, point_features)
+        point_features = point_features.contiguous().view(-1, point_features.shape[-1])
 
         batch_dict['point_features'] = point_features  # (BxN, C)
         batch_dict['point_coords'] = point_coords  # (BxN, 4)
