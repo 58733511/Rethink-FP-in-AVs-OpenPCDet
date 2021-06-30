@@ -189,7 +189,7 @@ MODEL:
             NSAMPLE: [16, 16]
             POOL_METHOD: max_pool
             
-        ROI_GRID_POOL_ADD:
+        ROI_GRID_POOL_ADD_MODULE:
             GRID_SIZE: 6
             MLPS: [[16, 16], [16, 16]]
             POOL_RADIUS: [0.4, 0.8]
