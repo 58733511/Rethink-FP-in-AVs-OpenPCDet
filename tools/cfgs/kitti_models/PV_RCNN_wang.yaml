@@ -142,6 +142,7 @@ MODEL:
                 MLPS: [[64, 64], [64, 64]]
                 POOL_RADIUS: [2.4, 4.8]
                 NSAMPLE: [16, 32]
+        USE_VECTOR_ATTENTION: True
         VECTOR_ATTENTION:
             INTERNAL_DIM: 200
             NNEIGH: 16
