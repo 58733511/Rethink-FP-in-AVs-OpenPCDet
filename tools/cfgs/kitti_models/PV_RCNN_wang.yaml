@@ -189,7 +189,13 @@ MODEL:
             POOL_RADIUS: [0.8, 1.6]
             NSAMPLE: [16, 16]
             POOL_METHOD: max_pool
-            
+        
+        OCCLUSION_DEPTH_MAP:
+            OCCLUSION_DEPTH_MAP_HEIGHT: 64
+            OCCLUSION_DEPTH_MAP_WIDTH: 2048
+            OCCLUSION_DEPTH_MAP_FOV_UP: 3
+            OCCLUSION_DEPTH_MAP_FOV_DOWN: -25.0
+
         ROI_GRID_POOL_ADD_MODULE:
             GRID_SIZE: 6
             MLPS: [[16, 16], [16, 16]]
@@ -238,7 +244,7 @@ MODEL:
             NMS_POST_MAXSIZE: 500
 
 OPTIMIZATION:
-    BATCH_SIZE_PER_GPU: 10
+    BATCH_SIZE_PER_GPU: 5
     NUM_EPOCHS: 80
 
     OPTIMIZER: adam_onecycle

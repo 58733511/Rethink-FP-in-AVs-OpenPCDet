@@ -178,7 +178,7 @@ class PVRCNNHead(RoIHeadTemplate):
             ##### get the semantic segmentation feature of the projected grid points
             pts_seg_info = seg_feature[pts_in_Seg_Img_copy[:,1],pts_in_Seg_Img_copy[:,0]]
             # fix for the cluster
-            #pts_seg_info = torch.from_numpy(pts_seg_info).cuda()
+            pts_seg_info = torch.from_numpy(pts_seg_info).cuda()
             global_roi_grid_points_each_batch_features[:,1:4] = pts_seg_info[:,:3]
             global_roi_grid_points_features[batch_num,:,:] = global_roi_grid_points_each_batch_features
             
